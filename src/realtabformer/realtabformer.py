@@ -24,11 +24,12 @@ from datasets import Dataset
 from sklearn.metrics.pairwise import manhattan_distances
 
 # from sklearn.metrics import accuracy_score
-from transformers import (  # Seq2SeqTrainer,
+from transformers import (
     EarlyStoppingCallback,
     EncoderDecoderConfig,
     EncoderDecoderModel,
     PreTrainedModel,
+    Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
     Trainer,
     TrainingArguments,
@@ -52,7 +53,7 @@ from .rtf_analyze import SyntheticDataBench
 from .rtf_datacollator import RelationalDataCollator
 from .rtf_exceptions import SampleEmptyLimitError
 from .rtf_sampler import RelationalSampler, TabularSampler
-from .rtf_trainer import FrozenSeq2SeqTrainer, ResumableTrainer
+from .rtf_trainer import ResumableTrainer
 from .rtf_validators import ObservationValidator
 
 
@@ -1045,7 +1046,7 @@ class REaLTabFormer:
             ]
 
         # instantiate trainer
-        trainer = FrozenSeq2SeqTrainer(
+        trainer = Seq2SeqTrainer(
             model=self.model,
             args=Seq2SeqTrainingArguments(**training_args_kwargs),
             callbacks=callbacks,
