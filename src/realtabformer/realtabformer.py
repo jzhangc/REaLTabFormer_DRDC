@@ -1115,6 +1115,7 @@ class REaLTabFormer:
         #self.model = AutoModelForCausalLM.from_config(self.tabular_config) ### henry
         self.model = AutoModelForCausalLM.from_pretrained(self.llm, 
                                                            #device_map="cuda:0", 
+                                                           ignore_mismatched_sizes=True,
                                                            config = self.tabular_config) ### henry
 
 
