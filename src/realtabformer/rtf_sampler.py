@@ -218,6 +218,9 @@ class REaLSampler:
         # This leverages the generic interface of HuggingFace transformer models' `.generate` method.
         # Refer to the transformers documentation for valid arguments to `generate_kwargs`.
         self.model.eval()
+        
+        #print(type(self)) <class 'REaLTabFormer.src.realtabformer.rtf_sampler.TabularSampler'>
+        #print(type(self.model)) <class 'transformers.models.gpt2.modeling_gpt2.GPT2LMHeadModel'>
 
         if constrain_tokens_gen:
             generate_kwargs["prefix_allowed_tokens_fn"] = self._prefix_allowed_tokens_fn
@@ -245,7 +248,9 @@ class REaLSampler:
             generate_kwargs["eos_token_id"] = vocab["token2id"][SpecialTokens.EOS]
 
         _samples = self.model.generate(**generate_kwargs)
-
+        
+        #print(type(_samples)) <class 'torch.Tensor'>
+        
         if as_numpy:
             if device == torch.device("cpu"):
                 _samples = _samples.numpy()

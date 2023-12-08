@@ -1,10 +1,6 @@
 """
-The REaLTabFormer implements the model training and data processing
-for tabular and relational data.
-
-Changed to Auto class
+This script is used for testing changes before applying
 """
-
 import json
 import logging
 import math
@@ -35,6 +31,7 @@ from transformers import (  # Seq2SeqTrainer,
 )
 from transformers.models.gpt2 import GPT2Config, GPT2LMHeadModel
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
+from airllm import AirLLMLlama2
 
 import realtabformer
 
@@ -1099,11 +1096,8 @@ class REaLTabFormer:
         self.tabular_config.eos_token_id = self.vocab["token2id"][SpecialTokens.EOS]
         self.tabular_config.vocab_size = len(self.vocab["id2token"])
 
-        if self.llm == "TheBloke/Nous-Hermes-Llama-2-7B-GPTQ":
-            self.tabular_config.quantization_config["disable_exllama"] = False  ### henry
-            self.tabular_config.quantization_config["exllama_config"] = {"version":2}
-            
-        #self.tabular_config.max_padding_length = 4096 
+        self.tabular_config.quantization_config["disable_exllama"] = False  ### henry
+        self.tabular_config.quantization_config["exllama_config"] = {"version":2}
 
         # Make sure that we have at least the number of
         # columns in the transformed data as positions.
@@ -1112,9 +1106,11 @@ class REaLTabFormer:
 
         #self.model = GPT2LMHeadModel(self.tabular_config)
         #self.model = AutoModelForCausalLM.from_config(self.tabular_config) ### henry
-        self.model = AutoModelForCausalLM.from_pretrained(self.llm, 
-                                                           #device_map="cuda:0", 
-                                                           config = self.tabular_config) ### henry
+        #self.model = AutoModelForCausalLM.from_pretrained(self.llm, 
+        #                                                   device_map="cuda:0", 
+        #                                                   config = self.tabular_config) ### henry
+        self.model = AirLLMLlama2(self.llm)
+        print("+++++++++air+++++++++++")
 
 
 
