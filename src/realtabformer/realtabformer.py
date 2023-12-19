@@ -161,9 +161,7 @@ class REaLTabFormer:
         assert llm is not None, "You much specify a LLM"
         ###self.efficient_finetuning = efficient_finetuning
         self.llm = llm
-        #self.tokenizer = AutoTokenizer.from_pretrained(self.llm)
-        #self.tokenizer.pad_token = self.tokenizer.eos_token
-        #self.model = AutoModelForCausalLM.from_pretrained(self.llm)
+
 
         if model_type not in ModelType.types():
             self._invalid_model_type(model_type)
@@ -294,6 +292,39 @@ class REaLTabFormer:
 
         self.realtabformer_version = realtabformer.__version__
 
+    ### henry
+    def _auto_model_from_pretrained(self): 
+        if self.llm == "TheBloke/Nous-Hermes-Llama-2-7B-GPTQ":
+            self.tabular_config.quantization_config["disable_exllama"] = False  ### henry
+            self.tabular_config.quantization_config["exllama_config"] = {"version":2}
+            self.model = AutoModelForCausalLM.from_pretrained(self.llm, 
+                                                           device_map="cuda:0", 
+                                                           ignore_mismatched_sizes=True,
+                                                           config = self.tabular_config)
+
+        elif self.llm == "microsoft/phi-1_5":
+            self.model = AutoModelForCausalLM.from_pretrained(self.llm, 
+                                                           trust_remote_code=True,
+                                                           ignore_mismatched_sizes=True,
+                                                           config = self.tabular_config) 
+            
+        #self.tabular_config.max_padding_length = 4096 
+
+        # Make sure that we have at least the number of
+        # columns in the transformed data as positions.
+        #if self.tabular_config.n_positions < len(self.vocab["column_token_ids"]):  ### henry
+        #    self.tabular_config.n_positions = 128 + len(self.vocab["column_token_ids"])
+
+        #self.model = GPT2LMHeadModel(self.tabular_config)
+        #self.model = AutoModelForCausalLM.from_config(self.tabular_config) ### henry
+        else:
+            self.model = AutoModelForCausalLM.from_pretrained(self.llm,  
+                                                           ignore_mismatched_sizes=True,
+                                                           config = self.tabular_config) 
+        
+
+        return self.model
+
     def _invalid_model_type(self, model_type):
         raise ValueError(
             f"Model type: {model_type} is not valid. REaLTabFormer only supports \
@@ -309,12 +340,16 @@ class REaLTabFormer:
         else:
             # Default is 12, use 6 for distill-gpt2 as default
             #tabular_config = GPT2Config(n_layer=6)
-            tabular_config = AutoConfig.from_pretrained(self.llm, n_layer=6) ### henry
+            tabular_config = AutoConfig.from_pretrained(self.llm, 
+                                                        n_layer=6,
+                                                        trust_remote_code=True
+                                                        ) ### henry
             
             
 
         self.tabular_config = tabular_config
         self.model = None
+
 
 
     def _init_relational(self, relational_config):
@@ -857,7 +892,10 @@ class REaLTabFormer:
             )
             loaded_model_path = not_bdm_path
 
-        self.model = self.model.from_pretrained(loaded_model_path.as_posix())
+        
+        self.model = self.model.from_pretrained(loaded_model_path.as_posix(), 
+                                                #ignore_mismatched_sizes=True
+                                                ) ### henry
         self.trainer_state = json.loads(
             (loaded_model_path / "trainer_state.json").read_text()
         )
@@ -1100,6 +1138,9 @@ class REaLTabFormer:
         self.tabular_config.eos_token_id = self.vocab["token2id"][SpecialTokens.EOS]
         self.tabular_config.vocab_size = len(self.vocab["id2token"])
 
+        self.model = self._auto_model_from_pretrained()
+
+        """ henry
         if self.llm == "TheBloke/Nous-Hermes-Llama-2-7B-GPTQ":
             self.tabular_config.quantization_config["disable_exllama"] = False  ### henry
             self.tabular_config.quantization_config["exllama_config"] = {"version":2}
@@ -1117,6 +1158,7 @@ class REaLTabFormer:
                                                            #device_map="cuda:0", 
                                                            ignore_mismatched_sizes=True,
                                                            config = self.tabular_config) ### henry
+        """
 
 
 
